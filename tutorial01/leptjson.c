@@ -62,11 +62,12 @@ int lept_parse(lept_value* v, const char* json) {
     res = lept_parse_value(&c, v);
     if(res == LEPT_PARSE_OK){
         lept_parse_whitespace(&c);
-        if(c.json[0] != '\0') return LEPT_PARSE_ROOT_NOT_SINGULAR;
-    } else {
-        return res;
+        if(c.json[0] != '\0') {
+            v->type = LEPT_NULL; //注意这里,要重置type,因为在调用lept_parse_value的时候已经将type更改来
+            return LEPT_PARSE_ROOT_NOT_SINGULAR;
+        }
     }
-    return LEPT_PARSE_OK;
+    return res;
 }
 
 lept_type lept_get_type(const lept_value* v) {
