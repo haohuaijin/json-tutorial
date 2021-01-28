@@ -104,30 +104,14 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
         } else if(ch == '\\') {
             ch = *p++;
             switch(ch){
-                case '\\':
-                    PUTC(c, '\\');
-                    break;
-                case '/':
-                    PUTC(c, '/');
-                    break;
-                case 'b':
-                    PUTC(c, '\b');
-                    break;
-                case 'f':
-                    PUTC(c, '\f');
-                    break;
-                case 'n':
-                    PUTC(c, '\n');
-                    break;
-                case 'r':
-                    PUTC(c, '\r');
-                    break;
-                case 't':
-                    PUTC(c, '\t');
-                    break;
-                case '\"':
-                    PUTC(c, '\"');
-                    break;
+                case '\\': PUTC(c, '\\'); break;
+                case '/': PUTC(c, '/'); break;
+                case 'b': PUTC(c, '\b'); break;
+                case 'f': PUTC(c, '\f'); break;
+                case 'n': PUTC(c, '\n'); break;
+                case 'r': PUTC(c, '\r'); break;
+                case 't': PUTC(c, '\t'); break;
+                case '\"': PUTC(c, '\"'); break;
                 default:
                     c->top = head;
                     return LEPT_PARSE_INVALID_STRING_ESCAPE;
@@ -188,7 +172,7 @@ lept_type lept_get_type(const lept_value* v) {
 int lept_get_boolean(const lept_value* v) {
     /* TODO */
     assert(v != NULL && (v->type == LEPT_FALSE || v->type == LEPT_TRUE));
-    return (v->type == LEPT_TRUE) ? 1 : 0;
+    return v->type == LEPT_TRUE;
 }
 
 void lept_set_boolean(lept_value* v, int b) {
