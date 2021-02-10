@@ -187,6 +187,7 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
     size_t size = 0;
     int ret;
     EXPECT(c, '[');
+    lept_parse_whitespace(c);
     if (*c->json == ']') {
         c->json++;
         v->type = LEPT_ARRAY;
@@ -199,8 +200,9 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         lept_init(&e);
         if ((ret = lept_parse_value(c, &e)) != LEPT_PARSE_OK)
             return ret;
-        memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value));
+        memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value)); //lept_context_push 返回入栈的初始地址
         size++;
+        lept_parse_whitespace(c);
         if (*c->json == ',')
             c->json++;
         else if (*c->json == ']') {
@@ -208,11 +210,12 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
             v->type = LEPT_ARRAY;
             v->u.a.size = size;
             size *= sizeof(lept_value);
-            memcpy(v->u.a.e = (lept_value*)malloc(size), lept_context_pop(c, size), size);
+            memcpy(v->u.a.e = (lept_value*)malloc(size), lept_context_pop(c, size), size); //lept_context_pop 返回出栈后的地址，也就是lept_context_push 返回的地址
             return LEPT_PARSE_OK;
         }
         else
             return LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
+        lept_parse_whitespace(c);
     }
 }
 

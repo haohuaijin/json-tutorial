@@ -175,7 +175,8 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
                             unsigned Low = u;
                             if(!(u >= 0xDC00 && u <= 0xDFFF))
                                 STRING_ERROR(LEPT_PARSE_INVALID_UNICODE_SURROGATE);
-                            u = 0x10000 + (High-0xD800)*0x400 + (Low-0xDC00);
+                            // u = 0x10000 + (High-0xD800)*0x400 + (Low-0xDC00);
+                            u = (((High - 0xD800) << 10) | (Low - 0xDC00)) + 0x10000; /* 这里可以用 ｜ 是因为高位左移了 */
                         }
                         lept_encode_utf8(c, u);
                         break;
