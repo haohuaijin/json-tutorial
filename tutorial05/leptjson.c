@@ -196,10 +196,14 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         return LEPT_PARSE_OK;
     }
     for (;;) {
+        /*
+         * 第四节的bug是，在嵌套的lept_parse_value()中，
+         * 提前得到的push返回地址，会在后续的push中通过realloc函数重新分配，导致前面返回的地址无效.
+         */
         lept_value e;
         lept_init(&e);
         if ((ret = lept_parse_value(c, &e)) != LEPT_PARSE_OK)
-            return ret;
+            break;
         memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value)); //lept_context_push 返回入栈的初始地址
         size++;
         lept_parse_whitespace(c);
@@ -212,11 +216,17 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
             size *= sizeof(lept_value);
             memcpy(v->u.a.e = (lept_value*)malloc(size), lept_context_pop(c, size), size); //lept_context_pop 返回出栈后的地址，也就是lept_context_push 返回的地址
             return LEPT_PARSE_OK;
+        } else {
+            ret = LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
+            break;
         }
-        else
-            return LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
         lept_parse_whitespace(c);
     }
+    /* run while the error occur. */
+    int i;
+    for(i = 0; i < size; i++)
+        lept_free((lept_value*)lept_context_pop(c, sizeof(lept_value)));
+    return ret;
 }
 
 static int lept_parse_value(lept_context* c, lept_value* v) {
@@ -254,8 +264,14 @@ int lept_parse(lept_value* v, const char* json) {
 
 void lept_free(lept_value* v) {
     assert(v != NULL);
-    if (v->type == LEPT_STRING)
+    if (v->type == LEPT_STRING){
         free(v->u.s.s);
+    } else if(v->type == LEPT_ARRAY){
+        int i;
+        for(i=0; i < v->u.a.size; i++)
+            lept_free(&v->u.a.e[i]);
+        free(v->u.a.e);
+    }
     v->type = LEPT_NULL;
 }
 
