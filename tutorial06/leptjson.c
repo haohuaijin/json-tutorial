@@ -127,8 +127,10 @@ static void lept_encode_utf8(lept_context* c, unsigned u) {
 
 #define STRING_ERROR(ret) do { c->top = head; return ret; } while(0)
 
-static int lept_parse_string(lept_context* c, lept_value* v) {
-    size_t head = c->top, len;
+/* 解析 JSON 字符串，把结果写入 str 和 len */
+/* str 指向 c->stack 中的元素，需要在 c->stack  */
+static int lept_parse_string_raw(lept_context* c, char** str, size_t* len) {
+    size_t head = c->top, length;
     unsigned u, u2;
     const char* p;
     EXPECT(c, '\"');
@@ -137,8 +139,11 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
         char ch = *p++;
         switch (ch) {
             case '\"':
-                len = c->top - head;
-                lept_set_string(v, (const char*)lept_context_pop(c, len), len);
+                length = c->top - head;
+                const char* temp = (const char*)lept_context_pop(c, length);
+                *str = (char*)malloc(length+1);
+                memcpy(*str, temp, length);
+                *len = length;
                 c->json = p;
                 return LEPT_PARSE_OK;
             case '\\':
@@ -180,6 +185,17 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
         }
     }
 }
+
+static int lept_parse_string(lept_context* c, lept_value* v) {
+    int ret;
+    char* s;
+    size_t len;
+    if ((ret = lept_parse_string_raw(c, &s, &len)) == LEPT_PARSE_OK)
+        lept_set_string(v, s, len);
+    free(*s);
+    return ret;
+}
+
 
 static int lept_parse_value(lept_context* c, lept_value* v);
 
@@ -243,17 +259,17 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
     size = 0;
     for (;;) {
         lept_init(&m.v);
-        /* \todo parse key to m.k, m.klen */
-        /* \todo parse ws colon ws */
+        /* TODO parse key to m.k, m.klen */
+        /* TODO parse ws colon ws */
         /* parse value */
         if ((ret = lept_parse_value(c, &m.v)) != LEPT_PARSE_OK)
             break;
         memcpy(lept_context_push(c, sizeof(lept_member)), &m, sizeof(lept_member));
         size++;
         m.k = NULL; /* ownership is transferred to member on stack */
-        /* \todo parse ws [comma | right-curly-brace] ws */
+        /* TODO parse ws [comma | right-curly-brace] ws */
     }
-    /* \todo Pop and free members on the stack */
+    /* TODO Pop and free members on the stack */
     return ret;
 }
 
