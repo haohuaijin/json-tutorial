@@ -140,9 +140,8 @@ static int lept_parse_string_raw(lept_context* c, char** str, size_t* len) {
         switch (ch) {
             case '\"':
                 length = c->top - head;
-                const char* temp = (const char*)lept_context_pop(c, length);
                 *str = (char*)malloc(length+1);
-                memcpy(*str, temp, length);
+                memcpy(*str, (const char*)lept_context_pop(c, length), length);
                 *len = length;
                 c->json = p;
                 return LEPT_PARSE_OK;
@@ -190,9 +189,10 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
     int ret;
     char* s;
     size_t len;
-    if ((ret = lept_parse_string_raw(c, &s, &len)) == LEPT_PARSE_OK)
+    if ((ret = lept_parse_string_raw(c, &s, &len)) == LEPT_PARSE_OK){
         lept_set_string(v, s, len);
-    free(*s);
+        free(s);
+    }
     return ret;
 }
 
