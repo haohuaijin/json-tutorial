@@ -307,6 +307,7 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
         lept_free(&t->v);
         free(t->k);
     }
+    v->type = LEPT_NULL;
     return ret;
 }
 
@@ -356,7 +357,7 @@ void lept_free(lept_value* v) {
                 lept_free(&v->u.a.e[i]);
             free(v->u.a.e);
             break;
-        case LEPT_OBJECT:
+        case LEPT_OBJECT: /* 释放object类型的内存 */
             for(i = 0; i < v->u.o.size; i++){
                 lept_free(&v->u.o.m[i].v);
                 free(v->u.o.m[i].k);
