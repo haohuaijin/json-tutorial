@@ -270,6 +270,7 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
         /* TODO parse ws colon ws */
         lept_parse_whitespace(c);
         if(*c->json != ':'){
+			free(m.k);
             ret = LEPT_PARSE_MISS_COLON;
             break;
         }
