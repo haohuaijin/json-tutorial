@@ -270,6 +270,7 @@ static int lept_parse_object(lept_context* c, lept_value* v) {
         /* TODO parse ws colon ws */
         lept_parse_whitespace(c);
         if(*c->json != ':'){
+            /* when miss colon, we should free the memory of m.k */
 			free(m.k);
             ret = LEPT_PARSE_MISS_COLON;
             break;
@@ -355,6 +356,12 @@ void lept_free(lept_value* v) {
                 lept_free(&v->u.a.e[i]);
             free(v->u.a.e);
             break;
+        case LEPT_OBJECT:
+            for(i = 0; i < v->u.o.size; i++){
+                lept_free(&v->u.o.m[i].v);
+                free(v->u.o.m[i].k);
+            }
+            free(v->u.o.m);
         default: break;
     }
     v->type = LEPT_NULL;
