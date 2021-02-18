@@ -411,6 +411,9 @@ static void test_stringify_string() {
     TEST_ROUNDTRIP("\"Hello\\nWorld\"");
     TEST_ROUNDTRIP("\"\\\" \\\\ / \\b \\f \\n \\r \\t\"");
     TEST_ROUNDTRIP("\"Hello\\u0000World\"");
+#if 0
+    TEST_ROUNDTRIP("\"\\u00A2\""); /* 没有设计unicode的解码 */ 
+#endif
 }
 
 static void test_stringify_array() {

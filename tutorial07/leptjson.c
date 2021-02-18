@@ -347,7 +347,28 @@ int lept_parse(lept_value* v, const char* json) {
 }
 
 static void lept_stringify_string(lept_context* c, const char* s, size_t len) {
-    /* ... */
+    PUTC(c, '\"');
+    for(int i=0; i < len; i++){
+        switch(s[i]){
+            case '\"': PUTC(c, '\\'); PUTC(c, '\"'); break;
+            case '\\': PUTC(c, '\\'); PUTC(c, '\\'); break;
+            case '\b': PUTC(c, '\\'); PUTC(c, 'b');  break;
+            case '\n': PUTC(c, '\\'); PUTC(c, 'n');  break;
+            case '\f': PUTC(c, '\\'); PUTC(c, 'f');  break;
+            case '\r': PUTC(c, '\\'); PUTC(c, 'r');  break;
+            case '\t': PUTC(c, '\\'); PUTC(c, 't');  break;
+            default:
+                if((unsigned char)s[i] < 0x20){
+                    PUTC(c, '\\'); PUTC(c, 'u');
+                    PUTC(c, '0');  PUTC(c, '0');
+                    PUTC(c, (s[i] >> 4) + '0'); /*运算符的优先级*/
+                    PUTC(c, (s[i] & 0xf) + '0'); /*运算符的优先级*/
+                } else {
+                    PUTC(c ,s[i]);
+                }
+        }
+    }
+    PUTC(c, '\"');
 }
 
 static void lept_stringify_value(lept_context* c, const lept_value* v) {
@@ -358,10 +379,22 @@ static void lept_stringify_value(lept_context* c, const lept_value* v) {
         case LEPT_NUMBER: c->top -= 32 - sprintf(lept_context_push(c, 32), "%.17g", v->u.n); break;
         case LEPT_STRING: lept_stringify_string(c, v->u.s.s, v->u.s.len); break;
         case LEPT_ARRAY:
-            /* ... */
+            PUTC(c, '[');
+            for(int i=0; i<v->u.a.size; ++i){
+                if(i) PUTC(c, ',');
+                lept_stringify_value(c, &v->u.a.e[i]);
+            }
+            PUTC(c, ']');
             break;
         case LEPT_OBJECT:
-            /* ... */
+            PUTC(c, '{');
+            for(int k=0; k<v->u.o.size; ++k){
+                if(k) PUTC(c, ',');
+                lept_stringify_string(c, v->u.o.m[k].k, v->u.o.m[k].klen);
+                PUTC(c, ':');
+                lept_stringify_value(c, &v->u.o.m[k].v);
+            }
+            PUTC(c, '}');
             break;
         default: assert(0 && "invalid type");
     }
